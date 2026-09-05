@@ -93,7 +93,7 @@ export function UploadZone({ onData, fileName, rowCount, onClear }: UploadZonePr
           handleFiles(e.dataTransfer.files)
         }}
         className={cn(
-          "relative flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-card/50 px-6 py-10 text-center transition-colors",
+          "relative flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-card/50 px-6 py-5 text-center transition-colors",
           dragging && "border-primary bg-primary/5",
         )}
       >
