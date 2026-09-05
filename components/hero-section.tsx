@@ -1,4 +1,4 @@
-import { Filter, Sparkles, Users, Target, Send } from "lucide-react"
+import { Sparkles, Users, Target, Send } from "lucide-react"
 
 const VALUE_PROPS = [
   {
@@ -23,12 +23,6 @@ const VALUE_PROPS = [
   },
 ]
 
-const METRICS = [
-  { value: "Hours → seconds", label: "Manual list cleanup, automated" },
-  { value: "100%", label: "Signups scored & deduped" },
-  { value: "3 CRMs", label: "Export-ready out of the box" },
-]
-
 export function HeroSection() {
   return (
     <header className="relative overflow-hidden border-b border-border">
@@ -37,23 +31,9 @@ export function HeroSection() {
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-[0.04] [background-image:linear-gradient(to_right,var(--foreground)_1px,transparent_1px),linear-gradient(to_bottom,var(--foreground)_1px,transparent_1px)] [background-size:44px_44px]"
       />
-      <div className="relative mx-auto max-w-6xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Filter className="h-4 w-4" />
-          </div>
-          <span className="text-sm font-semibold tracking-tight">Signup Triage</span>
-          <span className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
-            Marketing Ops
-          </span>
-        </div>
-
-        <div className="mt-8 max-w-3xl">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground">
-            <Sparkles className="h-3.5 w-3.5" />
-            Stop hand-cleaning signup spreadsheets
-          </div>
-          <h1 className="mt-5 text-pretty text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
+      <div className="relative mx-auto max-w-6xl px-4 py-7 sm:px-6 sm:py-7 lg:px-8">
+        <div className="max-w-3xl">
+          <h1 className="text-pretty text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
             Turn messy signups into sales-ready pipeline
           </h1>
           <p className="mt-5 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
@@ -62,15 +42,6 @@ export function HeroSection() {
             your team spends time selling to the right accounts instead of fixing CSVs.
           </p>
         </div>
-
-        <dl className="mt-10 grid grid-cols-1 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-3">
-          {METRICS.map((m) => (
-            <div key={m.label} className="bg-card px-5 py-4">
-              <dt className="text-2xl font-semibold tracking-tight">{m.value}</dt>
-              <dd className="mt-1 text-sm text-muted-foreground">{m.label}</dd>
-            </div>
-          ))}
-        </dl>
 
         <ul className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {VALUE_PROPS.map((prop) => (
