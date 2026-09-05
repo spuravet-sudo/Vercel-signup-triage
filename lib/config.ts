@@ -152,3 +152,56 @@ export const SCORE_THRESHOLDS = {
   hot: 60,
   warm: 30,
 } as const
+
+/* -------------------------------------------------------------------------- */
+/*  Runtime-editable config                                                    */
+/*                                                                             */
+/*  The pipeline reads scoring weights and the free / enterprise domain lists  */
+/*  from a plain object so the UI can hand a mutated copy back in and recompute */
+/*  live — no code change required to tune the rules.                          */
+/* -------------------------------------------------------------------------- */
+
+export interface ScoringWeights {
+  /** +N when the email is on a real business domain (not free/consumer). */
+  businessDomain: number
+  /** +N when the email domain is on the known-enterprise seed list. */
+  knownEnterpriseDomain: number
+  /** +N when the raw company name contains an enterprise keyword. */
+  enterpriseKeyword: number
+  /** +N when 3+ signups share the same email domain (team signal). */
+  multipleSignupsSameDomain: number
+  /** -N penalty when the email is a free/consumer domain. */
+  freeEmailPenalty: number
+  /** -N penalty when the company name is missing. */
+  missingCompanyPenalty: number
+  /** Score at or above this is "Hot". */
+  hotThreshold: number
+  /** Score at or above this (but below Hot) is "Warm". */
+  warmThreshold: number
+}
+
+export const DEFAULT_SCORING_WEIGHTS: ScoringWeights = {
+  businessDomain: 30,
+  knownEnterpriseDomain: 25,
+  enterpriseKeyword: 15,
+  multipleSignupsSameDomain: 10,
+  freeEmailPenalty: -20,
+  missingCompanyPenalty: -15,
+  hotThreshold: SCORE_THRESHOLDS.hot,
+  warmThreshold: SCORE_THRESHOLDS.warm,
+}
+
+export interface TriageConfig {
+  weights: ScoringWeights
+  freeEmailDomains: string[]
+  knownEnterpriseDomains: string[]
+}
+
+/** A fresh, deeply-copied default config the UI can safely mutate. */
+export function defaultTriageConfig(): TriageConfig {
+  return {
+    weights: { ...DEFAULT_SCORING_WEIGHTS },
+    freeEmailDomains: [...FREE_EMAIL_DOMAINS],
+    knownEnterpriseDomains: [...KNOWN_ENTERPRISE_DOMAINS],
+  }
+}

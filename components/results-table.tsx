@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ArrowDown, ArrowUp, ChevronsUpDown, HelpCircle, Info } from "lucide-react"
+import { ArrowDown, ArrowRight, ArrowUp, ChevronRight, ChevronsUpDown, HelpCircle, Info } from "lucide-react"
 
 import {
   Table,
@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { TierBadge } from "@/components/tier-badge"
-import { dataQualityFlags } from "@/lib/pipeline"
+import { cleaningDiff, dataQualityFlags } from "@/lib/pipeline"
 import { cn } from "@/lib/utils"
 import type { EnterpriseTier, ProcessedRow } from "@/lib/types"
 
@@ -88,6 +88,16 @@ export function ResultsTable({ rows }: { rows: ProcessedRow[] }) {
   const [sortDir, setSortDir] = React.useState<SortDir>("desc")
   const [tierFilter, setTierFilter] = React.useState<string>("all")
   const [flagFilter, setFlagFilter] = React.useState<string>("all")
+  const [expanded, setExpanded] = React.useState<Set<number>>(() => new Set())
+
+  const toggleExpand = (rowId: number) => {
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(rowId)) next.delete(rowId)
+      else next.add(rowId)
+      return next
+    })
+  }
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -164,6 +174,7 @@ export function ResultsTable({ rows }: { rows: ProcessedRow[] }) {
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
+              <TableHead className="w-[36px]" aria-label="Expand" />
               <TableHead className="w-[60px]">Row</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
@@ -189,15 +200,31 @@ export function ResultsTable({ rows }: { rows: ProcessedRow[] }) {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">
                   No rows match the current filters.
                 </TableCell>
               </TableRow>
             ) : (
               filtered.map((row) => {
                 const flags = dataQualityFlags(row)
+                const isOpen = expanded.has(row.rowId)
+                const diff = isOpen ? cleaningDiff(row) : []
                 return (
-                  <TableRow key={row.rowId}>
+                  <React.Fragment key={row.rowId}>
+                  <TableRow className={cn(isOpen && "border-b-0 bg-muted/30")}>
+                    <TableCell className="pr-0">
+                      <button
+                        type="button"
+                        onClick={() => toggleExpand(row.rowId)}
+                        aria-expanded={isOpen}
+                        aria-label={`${isOpen ? "Hide" : "Show"} raw vs cleaned for row ${row.rowId}`}
+                        className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                      >
+                        <ChevronRight
+                          className={cn("h-4 w-4 transition-transform", isOpen && "rotate-90")}
+                        />
+                      </button>
+                    </TableCell>
                     <TableCell className="font-mono text-xs text-muted-foreground">
                       {row.rowId}
                     </TableCell>
@@ -308,6 +335,64 @@ export function ResultsTable({ rows }: { rows: ProcessedRow[] }) {
                       </Popover>
                     </TableCell>
                   </TableRow>
+                  {isOpen && (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell colSpan={9} className="bg-muted/30 py-3">
+                        <div className="rounded-md border border-border bg-background p-3">
+                          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            Raw vs. cleaned
+                          </p>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="text-left text-muted-foreground">
+                                  <th className="pb-1 pr-4 font-medium">Field</th>
+                                  <th className="pb-1 pr-4 font-medium">Raw (from CSV)</th>
+                                  <th className="pb-1 pr-4 font-medium" />
+                                  <th className="pb-1 font-medium">Cleaned</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {diff.map((d) => (
+                                  <tr key={d.field} className="align-top">
+                                    <td className="py-1 pr-4 text-muted-foreground">{d.field}</td>
+                                    <td className="py-1 pr-4 font-mono">
+                                      {d.raw ? (
+                                        d.raw
+                                      ) : (
+                                        <span className="text-muted-foreground">(empty)</span>
+                                      )}
+                                    </td>
+                                    <td className="py-1 pr-4">
+                                      <ArrowRight
+                                        className={cn(
+                                          "h-3 w-3",
+                                          d.changed ? "text-primary" : "text-muted-foreground/40",
+                                        )}
+                                      />
+                                    </td>
+                                    <td
+                                      className={cn(
+                                        "py-1 font-mono",
+                                        d.changed && "font-semibold text-foreground",
+                                      )}
+                                    >
+                                      {d.cleaned ? (
+                                        d.cleaned
+                                      ) : (
+                                        <span className="text-muted-foreground">(empty)</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  </React.Fragment>
                 )
               })
             )}

@@ -7,7 +7,11 @@ import { UploadZone } from "@/components/upload-zone"
 import { SummaryPanel } from "@/components/summary-panel"
 import { ResultsTable } from "@/components/results-table"
 import { ExportSection } from "@/components/export-section"
+import { ScoringConfig } from "@/components/scoring-config"
+import { ProductionNotes } from "@/components/production-notes"
 import { computeSummary, runPipeline } from "@/lib/pipeline"
+import { defaultTriageConfig } from "@/lib/config"
+import type { TriageConfig } from "@/lib/config"
 import type { RawRow } from "@/lib/types"
 
 function Section({
@@ -40,6 +44,7 @@ function Section({
 export function TriageApp() {
   const [rawRows, setRawRows] = React.useState<RawRow[] | null>(null)
   const [fileName, setFileName] = React.useState<string | null>(null)
+  const [config, setConfig] = React.useState<TriageConfig>(defaultTriageConfig)
 
   const handleData = React.useCallback((rows: RawRow[], name: string) => {
     setRawRows(rows)
@@ -52,12 +57,12 @@ export function TriageApp() {
   }, [])
 
   const processed = React.useMemo(
-    () => (rawRows ? runPipeline(rawRows, { source: fileName ?? "upload" }) : null),
-    [rawRows, fileName],
+    () => (rawRows ? runPipeline(rawRows, { source: fileName ?? "upload", config }) : null),
+    [rawRows, fileName, config],
   )
   const summary = React.useMemo(
-    () => (processed ? computeSummary(processed) : null),
-    [processed],
+    () => (processed ? computeSummary(processed, config) : null),
+    [processed, config],
   )
 
   return (
@@ -104,9 +109,12 @@ export function TriageApp() {
           <Section
             icon={ListChecks}
             title="3 · Scored results"
-            description="Every row with its tier, score, and the exact reasons behind it. Sort by tier or score, filter by tier or data-quality flag."
+            description="Every row with its tier, score, and the exact reasons behind it. Sort by tier or score, filter by tier or data-quality flag. Expand a row to see raw vs. cleaned values."
           >
-            <ResultsTable rows={processed} />
+            <div className="space-y-3">
+              <ScoringConfig config={config} onChange={setConfig} />
+              <ResultsTable rows={processed} />
+            </div>
           </Section>
 
           <Section
@@ -116,6 +124,8 @@ export function TriageApp() {
           >
             <ExportSection rows={processed} />
           </Section>
+
+          <ProductionNotes />
         </>
       ) : (
         <div className="rounded-lg border border-dashed border-border bg-card/40 px-6 py-16 text-center">

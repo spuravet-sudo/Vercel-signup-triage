@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronDown, Download, FileDown, Table2 } from "lucide-react"
+import { ChevronDown, Download, FileDown, FileJson, Table2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -10,6 +10,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import { cn } from "@/lib/utils"
+import { buildAuditLog } from "@/lib/pipeline"
 import {
   PLATFORMS,
   buildCsv,
@@ -20,8 +21,8 @@ import {
 } from "@/lib/export"
 import type { ProcessedRow } from "@/lib/types"
 
-function downloadCsv(filename: string, content: string) {
-  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" })
+function downloadFile(filename: string, content: string, mime: string) {
+  const blob = new Blob([content], { type: mime })
   const url = URL.createObjectURL(blob)
   const link = document.createElement("a")
   link.href = url
@@ -31,6 +32,9 @@ function downloadCsv(filename: string, content: string) {
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
 }
+
+const downloadCsv = (filename: string, content: string) =>
+  downloadFile(filename, content, "text/csv;charset=utf-8;")
 
 export function ExportSection({ rows }: { rows: ProcessedRow[] }) {
   const [platform, setPlatform] = React.useState<Platform>("customerio")
@@ -48,6 +52,16 @@ export function ExportSection({ rows }: { rows: ProcessedRow[] }) {
   const handleExcludedExport = () => {
     const csv = buildExcludedCsv(rows, platform)
     downloadCsv(`signups_${platform}_excluded.csv`, csv)
+  }
+
+  const handleAuditExport = () => {
+    const log = {
+      generated_at: new Date().toISOString(),
+      row_count: rows.length,
+      note: "Per-row lineage: raw input, cleaned output, score reasons, data-quality flags, and duplicate linkage. This is what you'd persist to a warehouse audit table in production.",
+      rows: buildAuditLog(rows),
+    }
+    downloadFile(`signups_audit_log.json`, JSON.stringify(log, null, 2), "application/json")
   }
 
   return (
@@ -94,10 +108,15 @@ export function ExportSection({ rows }: { rows: ProcessedRow[] }) {
               <FileDown className="h-4 w-4" />
               Download excluded / needs-review rows
             </Button>
+            <Button variant="outline" onClick={handleAuditExport}>
+              <FileJson className="h-4 w-4" />
+              Download audit log (JSON)
+            </Button>
           </div>
           <p className="text-xs text-muted-foreground">
             The CRM export contains only clean rows. Needs-Review and junk rows are never dropped
-            silently — they download in a separate file so nothing disappears.
+            silently — they download in a separate file so nothing disappears. The audit log is the
+            full per-row lineage you&apos;d persist for debugging and reproducibility.
           </p>
         </div>
 

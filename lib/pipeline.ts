@@ -1,12 +1,13 @@
 import {
   DISPOSABLE_DOMAINS,
+  DEFAULT_SCORING_WEIGHTS,
   ENTERPRISE_COMPANY_KEYWORDS,
   FREE_EMAIL_DOMAINS,
-  KNOWN_ENTERPRISE_DOMAINS,
   LEGAL_SUFFIXES,
   ROLE_BASED_LOCAL_PARTS,
-  SCORE_THRESHOLDS,
+  defaultTriageConfig,
 } from "./config"
+import type { ScoringWeights, TriageConfig } from "./config"
 import type {
   EnterpriseTier,
   ProcessedRow,
@@ -140,8 +141,11 @@ export function mapRegion(raw: string): Region {
 
 /* Email classification ---------------------------------------------------- */
 
-export function isFreeEmailDomain(domain: string): boolean {
-  return FREE_EMAIL_DOMAINS.includes(domain)
+export function isFreeEmailDomain(
+  domain: string,
+  freeDomains: readonly string[] = FREE_EMAIL_DOMAINS,
+): boolean {
+  return freeDomains.includes(domain)
 }
 
 export function isRoleBasedLocalPart(localPart: string): boolean {
@@ -199,7 +203,13 @@ function countNonBlank(row: ProcessedRow): number {
   return fields.filter((f) => f && f.trim() !== "").length
 }
 
-function buildBaseRow(raw: RawRow, rowId: number, source: string, ingestedAt: string): ProcessedRow {
+function buildBaseRow(
+  raw: RawRow,
+  rowId: number,
+  source: string,
+  ingestedAt: string,
+  config: TriageConfig,
+): ProcessedRow {
   const emailRaw = pickField(raw, EMAIL_KEYS)
   let firstNameRaw = pickField(raw, FIRST_KEYS)
   let lastNameRaw = pickField(raw, LAST_KEYS)
@@ -231,7 +241,7 @@ function buildBaseRow(raw: RawRow, rowId: number, source: string, ingestedAt: st
   const missing_company = companyName === ""
   const missing_name = firstName === "" && lastName === ""
 
-  const is_free_email = !missing_email && isFreeEmailDomain(emailDomain)
+  const is_free_email = !missing_email && isFreeEmailDomain(emailDomain, config.freeEmailDomains)
   const is_role_based_email = !missing_email && isRoleBasedLocalPart(emailLocalPart)
   const is_disposable_or_junk =
     !missing_email && !invalid_email_format
@@ -289,40 +299,51 @@ function hasEnterpriseKeyword(companyRaw: string): string | null {
   return null
 }
 
-export function scoreRow(row: ProcessedRow, domainCount: number): void {
+const signed = (n: number) => (n >= 0 ? `+${n}` : `${n}`)
+
+export function scoreRow(
+  row: ProcessedRow,
+  domainCount: number,
+  config: TriageConfig = defaultTriageConfig(),
+): void {
+  const w = config.weights
   let score = 0
   const reasons: string[] = []
 
   if (!row.missing_email && !row.invalid_email_format && !row.is_free_email) {
-    score += 30
-    reasons.push("Business email domain, not a free/consumer provider (+30)")
+    score += w.businessDomain
+    reasons.push(`Business email domain, not a free/consumer provider (${signed(w.businessDomain)})`)
   }
 
-  if (KNOWN_ENTERPRISE_DOMAINS.includes(row.emailDomain)) {
-    score += 25
-    reasons.push(`Email domain "${row.emailDomain}" is a known enterprise domain (+25)`)
+  if (config.knownEnterpriseDomains.includes(row.emailDomain)) {
+    score += w.knownEnterpriseDomain
+    reasons.push(
+      `Email domain "${row.emailDomain}" is a known enterprise domain (${signed(w.knownEnterpriseDomain)})`,
+    )
   }
 
   const keyword = hasEnterpriseKeyword(row.companyNameRaw)
   if (keyword) {
-    score += 15
-    reasons.push(`Company name contains enterprise signal "${keyword}" (+15)`)
+    score += w.enterpriseKeyword
+    reasons.push(`Company name contains enterprise signal "${keyword}" (${signed(w.enterpriseKeyword)})`)
   }
 
   // "2+ other rows share this row's domain" => at least 3 total with this domain.
   if (row.emailDomain && domainCount >= 3) {
-    score += 10
-    reasons.push(`${domainCount} signups share the domain "${row.emailDomain}" — multiple people from one org (+10)`)
+    score += w.multipleSignupsSameDomain
+    reasons.push(
+      `${domainCount} signups share the domain "${row.emailDomain}" — multiple people from one org (${signed(w.multipleSignupsSameDomain)})`,
+    )
   }
 
   if (row.is_free_email) {
-    score -= 20
-    reasons.push("Free/consumer email domain (-20)")
+    score += w.freeEmailPenalty
+    reasons.push(`Free/consumer email domain (${signed(w.freeEmailPenalty)})`)
   }
 
   if (row.missing_company) {
-    score -= 15
-    reasons.push("Company name is missing (-15)")
+    score += w.missingCompanyPenalty
+    reasons.push(`Company name is missing (${signed(w.missingCompanyPenalty)})`)
   }
 
   // Hard override
@@ -345,14 +366,17 @@ export function scoreRow(row: ProcessedRow, domainCount: number): void {
   }
 
   row.enterprise_score = score
-  row.enterprise_tier = tierForScore(score)
+  row.enterprise_tier = tierForScore(score, w)
   row.score_reasons =
     reasons.length > 0 ? reasons : ["No positive or negative signals fired (base score 0)"]
 }
 
-export function tierForScore(score: number): EnterpriseTier {
-  if (score >= SCORE_THRESHOLDS.hot) return "Hot"
-  if (score >= SCORE_THRESHOLDS.warm) return "Warm"
+export function tierForScore(
+  score: number,
+  weights: ScoringWeights = DEFAULT_SCORING_WEIGHTS,
+): EnterpriseTier {
+  if (score >= weights.hotThreshold) return "Hot"
+  if (score >= weights.warmThreshold) return "Warm"
   return "Low Priority"
 }
 
@@ -363,13 +387,15 @@ export function tierForScore(score: number): EnterpriseTier {
 export interface PipelineOptions {
   source?: string
   ingestedAt?: string
+  config?: TriageConfig
 }
 
 export function runPipeline(rawRows: RawRow[], options: PipelineOptions = {}): ProcessedRow[] {
   const source = options.source ?? "self-serve-signup"
   const ingestedAt = options.ingestedAt ?? new Date().toISOString()
+  const config = options.config ?? defaultTriageConfig()
 
-  const rows = rawRows.map((raw, index) => buildBaseRow(raw, index + 1, source, ingestedAt))
+  const rows = rawRows.map((raw, index) => buildBaseRow(raw, index + 1, source, ingestedAt, config))
 
   // 1. Exact dedupe by normalized email.
   const byEmail = new Map<string, ProcessedRow[]>()
@@ -424,13 +450,16 @@ export function runPipeline(rawRows: RawRow[], options: PipelineOptions = {}): P
   // 4. Score.
   for (const row of rows) {
     const domainCount = row.emailDomain ? (domainCounts.get(row.emailDomain) ?? 0) : 0
-    scoreRow(row, domainCount)
+    scoreRow(row, domainCount, config)
   }
 
   return rows
 }
 
-export function computeSummary(rows: ProcessedRow[]): TriageSummary {
+export function computeSummary(
+  rows: ProcessedRow[],
+  config: TriageConfig = defaultTriageConfig(),
+): TriageSummary {
   const summary: TriageSummary = {
     totalRows: rows.length,
     validRows: 0,
@@ -455,7 +484,7 @@ export function computeSummary(rows: ProcessedRow[]): TriageSummary {
     if (row.missing_name) summary.missingName += 1
     if (row.invalid_email_format) summary.invalidEmail += 1
     if (row.is_free_email) summary.freeEmail += 1
-    if (KNOWN_ENTERPRISE_DOMAINS.includes(row.emailDomain)) summary.enterpriseDomainMatch += 1
+    if (config.knownEnterpriseDomains.includes(row.emailDomain)) summary.enterpriseDomainMatch += 1
     if (row.is_duplicate) summary.exactDuplicates += 1
     if (row.same_account_multiple_signups) summary.fuzzyDuplicates += 1
     if (row.is_disposable_or_junk) summary.disposableJunk += 1
@@ -463,6 +492,104 @@ export function computeSummary(rows: ProcessedRow[]): TriageSummary {
   }
 
   return summary
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Cleaning diff + audit log (lineage / debugging output)                     */
+/* -------------------------------------------------------------------------- */
+
+export interface CleaningDiffField {
+  field: string
+  raw: string
+  cleaned: string
+  changed: boolean
+}
+
+/** The before/after of the normalization step for the reviewer-facing diff. */
+export function cleaningDiff(row: ProcessedRow): CleaningDiffField[] {
+  const fields: CleaningDiffField[] = [
+    { field: "company", raw: row.companyNameRaw ?? "", cleaned: row.companyName },
+    { field: "company (match key)", raw: row.companyNameRaw ?? "", cleaned: row.companyNameNormalized },
+    { field: "email", raw: row.emailRaw ?? "", cleaned: row.email },
+    { field: "region", raw: row.regionRaw ?? "", cleaned: row.region },
+    {
+      field: "name",
+      raw: [row.firstNameRaw, row.lastNameRaw].filter(Boolean).join(" "),
+      cleaned: row.fullName,
+    },
+  ].map((f) => ({ ...f, changed: (f.raw ?? "").trim() !== (f.cleaned ?? "").trim() }))
+  return fields
+}
+
+export interface AuditLogEntry {
+  raw_row_id: number
+  ingested_at: string
+  source: string
+  raw: {
+    email: string
+    first_name: string
+    last_name: string
+    company: string
+    region: string
+    cio_id: string
+  }
+  cleaned: {
+    email: string
+    email_domain: string
+    full_name: string
+    company: string
+    company_match_key: string
+    region: Region
+  }
+  enterprise_score: number
+  enterprise_tier: EnterpriseTier
+  score_reasons: string[]
+  data_quality_flags: string[]
+  duplicate: {
+    is_exact_duplicate: boolean
+    duplicate_of_raw_row_id: number | null
+    same_account_multiple_signups: boolean
+    team_size_signal: number
+  }
+}
+
+/**
+ * Per-row lineage record. In production this is what you'd persist to a
+ * warehouse audit table so any downstream number is fully explainable and a
+ * bad export can be traced back to its raw input — not just the clean output.
+ */
+export function buildAuditLog(rows: ProcessedRow[]): AuditLogEntry[] {
+  return rows.map((row) => ({
+    raw_row_id: row.rowId,
+    ingested_at: row.ingested_at,
+    source: row.source,
+    raw: {
+      email: row.emailRaw ?? "",
+      first_name: row.firstNameRaw ?? "",
+      last_name: row.lastNameRaw ?? "",
+      company: row.companyNameRaw ?? "",
+      region: row.regionRaw ?? "",
+      cio_id: row.cioId ?? "",
+    },
+    cleaned: {
+      email: row.email,
+      email_domain: row.emailDomain,
+      full_name: row.fullName,
+      company: row.companyName,
+      company_match_key: row.companyNameNormalized,
+      region: row.region,
+    },
+    enterprise_score: row.enterprise_score,
+    enterprise_tier: row.enterprise_tier,
+    score_reasons: row.score_reasons,
+    data_quality_flags: dataQualityFlags(row),
+    duplicate: {
+      is_exact_duplicate: row.is_duplicate,
+      duplicate_of_raw_row_id: row.duplicate_of_row_id,
+      same_account_multiple_signups: row.same_account_multiple_signups,
+      team_size_signal: row.team_size_signal,
+    },
+  }))
 }
 
 /** Human-readable data-quality flags for a row. */
