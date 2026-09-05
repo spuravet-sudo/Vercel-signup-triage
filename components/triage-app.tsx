@@ -88,7 +88,7 @@ export function TriageApp() {
         <>
           <Section
             icon={Database}
-            title="2 · Triage summary"
+            title="Step 2: Data clean up summary"
             description="Counts computed from the cleaning, dedupe, and scoring pipeline."
           >
             <SummaryPanel summary={summary} />
@@ -96,7 +96,7 @@ export function TriageApp() {
 
           <Section
             icon={ListChecks}
-            title="3 · Scored results"
+            title="Step 3: Scored results"
             description="Every row with its tier, score, and the exact reasons behind it. Sort by tier or score, filter by tier or data-quality flag. Expand a row to see raw vs. cleaned values."
           >
             <div className="space-y-3">
@@ -107,7 +107,7 @@ export function TriageApp() {
 
           <Section
             icon={Database}
-            title="4 · CRM export"
+            title="Step 4: CRM export"
             description="Preview and download platform-ready CSVs for Customer.io, Salesforce, and Snowflake."
           >
             <ExportSection rows={processed} />
