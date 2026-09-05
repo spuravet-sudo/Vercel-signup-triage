@@ -1,8 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { Database, Filter, ListChecks, Upload } from "lucide-react"
+import { Database, ListChecks, Upload } from "lucide-react"
 
+import { HeroSection } from "@/components/hero-section"
 import { UploadZone } from "@/components/upload-zone"
 import { SummaryPanel } from "@/components/summary-panel"
 import { ResultsTable } from "@/components/results-table"
@@ -66,23 +67,10 @@ export function TriageApp() {
   )
 
   return (
-    <div className="mx-auto max-w-6xl space-y-10 px-4 py-8 sm:px-6 lg:px-8">
-      <header className="flex flex-col gap-1 border-b border-border pb-6">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Filter className="h-4 w-4" />
-          </div>
-          <h1 className="text-lg font-semibold tracking-tight">Signup Triage</h1>
-          <span className="rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
-            Marketing Ops
-          </span>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Clean, deduplicate, and score inbound self-serve signups for ABM follow-up, then export
-          CRM-ready files. Everything runs locally in your browser.
-        </p>
-      </header>
+    <div>
+      <HeroSection />
 
+      <div className="mx-auto max-w-6xl space-y-10 px-4 py-10 sm:px-6 lg:px-8">
       <Section
         icon={Upload}
         title="1 · Ingest signups"
@@ -136,6 +124,7 @@ export function TriageApp() {
           </p>
         </div>
       )}
+      </div>
     </div>
   )
 }
