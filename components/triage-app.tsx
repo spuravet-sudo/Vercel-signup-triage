@@ -73,7 +73,7 @@ export function TriageApp() {
       <div className="mx-auto max-w-6xl space-y-10 px-4 py-10 sm:px-6 lg:px-8">
       <Section
         icon={Upload}
-        title="1 · Ingest signups"
+        title="Step 1: Add signup data"
         description="Upload a messy inbound CSV or load the bundled sample to demo instantly."
       >
         <UploadZone
