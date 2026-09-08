@@ -195,7 +195,7 @@ export function ResultsTable({ rows }: { rows: ProcessedRow[] }) {
                 onClick={() => toggleSort("score")}
                 className="w-[90px]"
               />
-              <TableHead className="w-[240px]">Outreach (3-touch)</TableHead>
+              <TableHead className="w-[90px]">Outreach</TableHead>
               <TableHead className="w-[60px] text-right">Why</TableHead>
             </TableRow>
           </TableHeader>
@@ -282,17 +282,16 @@ export function ResultsTable({ rows }: { rows: ProcessedRow[] }) {
                         {row.enterprise_score}
                       </span>
                     </TableCell>
-                    <TableCell className="max-w-[240px]">
+                    <TableCell>
                       {row.outreach.some(Boolean) ? (
                         <Popover>
                           <PopoverTrigger asChild>
                             <button
                               type="button"
                               aria-label={`Outreach drafts for row ${row.rowId}`}
-                              className="flex w-full items-start gap-1.5 text-left text-xs text-muted-foreground hover:text-foreground"
+                              className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
                             >
-                              <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                              <span className="line-clamp-2">{row.outreach[0]}</span>
+                              <Mail className="h-4 w-4" />
                             </button>
                           </PopoverTrigger>
                           <PopoverContent align="end" className="w-96">
