@@ -9,6 +9,7 @@ import {
 } from "./config"
 import type { ScoringWeights, TriageConfig } from "./config"
 import { generateOutreach } from "./outreach"
+import { inferIndustry } from "./industry"
 import type {
   EnterpriseTier,
   ProcessedRow,
@@ -268,6 +269,7 @@ function buildBaseRow(
     fullName: [firstName, lastName].filter(Boolean).join(" "),
     companyName,
     companyNameNormalized,
+    industry: inferIndustry(companyName, emailDomain),
     region,
     missing_email,
     invalid_email_format,
