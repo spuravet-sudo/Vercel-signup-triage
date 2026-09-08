@@ -209,6 +209,7 @@ function buildBaseRow(
   source: string,
   ingestedAt: string,
   config: TriageConfig,
+  eventName: string,
 ): ProcessedRow {
   const emailRaw = pickField(raw, EMAIL_KEYS)
   let firstNameRaw = pickField(raw, FIRST_KEYS)
@@ -283,6 +284,7 @@ function buildBaseRow(
     score_reasons: [],
     source,
     ingested_at: ingestedAt,
+    eventName,
   }
 }
 
@@ -388,14 +390,18 @@ export interface PipelineOptions {
   source?: string
   ingestedAt?: string
   config?: TriageConfig
+  eventName?: string
 }
 
 export function runPipeline(rawRows: RawRow[], options: PipelineOptions = {}): ProcessedRow[] {
   const source = options.source ?? "self-serve-signup"
   const ingestedAt = options.ingestedAt ?? new Date().toISOString()
   const config = options.config ?? defaultTriageConfig()
+  const eventName = (options.eventName ?? "").trim()
 
-  const rows = rawRows.map((raw, index) => buildBaseRow(raw, index + 1, source, ingestedAt, config))
+  const rows = rawRows.map((raw, index) =>
+    buildBaseRow(raw, index + 1, source, ingestedAt, config, eventName),
+  )
 
   // 1. Exact dedupe by normalized email.
   const byEmail = new Map<string, ProcessedRow[]>()

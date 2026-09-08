@@ -61,6 +61,7 @@ export interface ProcessedRow {
   // Provenance
   source: string
   ingested_at: string
+  eventName: string
 }
 
 export interface TriageSummary {

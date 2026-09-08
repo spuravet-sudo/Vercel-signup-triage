@@ -85,6 +85,7 @@ export const CUSTOMERIO_HEADERS = [
   "is_free_email",
   "is_duplicate",
   "data_quality_flags",
+  "event_name",
   "source",
   "ingested_at",
 ]
@@ -102,6 +103,7 @@ function customerIoRecord(row: ProcessedRow): (string | number)[] {
     bool(row.is_free_email),
     bool(row.is_duplicate),
     dataQualityFlags(row).join("|"),
+    row.eventName,
     row.source,
     row.ingested_at,
   ]
@@ -172,6 +174,7 @@ export const SNOWFLAKE_HEADERS = [
   "ENTERPRISE_SCORE",
   "ENTERPRISE_TIER",
   "DATA_QUALITY_FLAGS",
+  "EVENT_NAME",
   "SOURCE",
   "INGESTED_AT",
 ]
@@ -192,6 +195,7 @@ function snowflakeRecord(row: ProcessedRow): (string | number)[] {
     row.enterprise_score,
     row.enterprise_tier,
     dataQualityFlags(row).join("|"),
+    row.eventName,
     row.source,
     row.ingested_at,
   ]
@@ -355,6 +359,7 @@ export function getFieldMapping(platform: Platform): FieldMap[] {
         { canonical: "is_free_email", crmField: "is_free_email", note: "TRUE / FALSE" },
         { canonical: "is_duplicate", crmField: "is_duplicate", note: "TRUE / FALSE" },
         { canonical: "data quality flags", crmField: "data_quality_flags", note: "Pipe-delimited" },
+        { canonical: "event_name (static)", crmField: "event_name", note: "Applied to every row in this batch" },
         { canonical: "source", crmField: "source" },
         { canonical: "ingested_at", crmField: "ingested_at", note: "ISO 8601" },
       ]
@@ -385,6 +390,7 @@ export function getFieldMapping(platform: Platform): FieldMap[] {
         { canonical: "enterprise_score", crmField: "ENTERPRISE_SCORE" },
         { canonical: "enterprise_tier", crmField: "ENTERPRISE_TIER" },
         { canonical: "data quality flags", crmField: "DATA_QUALITY_FLAGS", note: "Pipe-delimited string" },
+        { canonical: "event_name (static)", crmField: "EVENT_NAME", note: "Applied to every row in this batch" },
         { canonical: "source", crmField: "SOURCE" },
         { canonical: "ingested_at", crmField: "INGESTED_AT" },
       ]

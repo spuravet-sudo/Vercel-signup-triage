@@ -46,6 +46,7 @@ export function TriageApp() {
   const [rawRows, setRawRows] = React.useState<RawRow[] | null>(null)
   const [fileName, setFileName] = React.useState<string | null>(null)
   const [config, setConfig] = React.useState<TriageConfig>(defaultTriageConfig)
+  const [eventName, setEventName] = React.useState("")
 
   const handleData = React.useCallback((rows: RawRow[], name: string) => {
     setRawRows(rows)
@@ -58,8 +59,11 @@ export function TriageApp() {
   }, [])
 
   const processed = React.useMemo(
-    () => (rawRows ? runPipeline(rawRows, { source: fileName ?? "upload", config }) : null),
-    [rawRows, fileName, config],
+    () =>
+      rawRows
+        ? runPipeline(rawRows, { source: fileName ?? "upload", config, eventName })
+        : null,
+    [rawRows, fileName, config, eventName],
   )
   const summary = React.useMemo(
     () => (processed ? computeSummary(processed, config) : null),
@@ -81,6 +85,8 @@ export function TriageApp() {
           onClear={handleClear}
           fileName={fileName}
           rowCount={rawRows?.length ?? 0}
+          eventName={eventName}
+          onEventNameChange={setEventName}
         />
       </Section>
 

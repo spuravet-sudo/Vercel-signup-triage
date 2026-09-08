@@ -2,9 +2,10 @@
 
 import * as React from "react"
 import Papa from "papaparse"
-import { Upload, FileSpreadsheet, Sparkles, Loader2, X } from "lucide-react"
+import { Upload, FileSpreadsheet, Sparkles, Loader2, X, Tag } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import type { RawRow } from "@/lib/types"
 
@@ -13,9 +14,18 @@ interface UploadZoneProps {
   fileName: string | null
   rowCount: number
   onClear: () => void
+  eventName: string
+  onEventNameChange: (value: string) => void
 }
 
-export function UploadZone({ onData, fileName, rowCount, onClear }: UploadZoneProps) {
+export function UploadZone({
+  onData,
+  fileName,
+  rowCount,
+  onClear,
+  eventName,
+  onEventNameChange,
+}: UploadZoneProps) {
   const [dragging, setDragging] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -81,6 +91,25 @@ export function UploadZone({ onData, fileName, rowCount, onClear }: UploadZonePr
 
   return (
     <div className="flex flex-col gap-3">
+      <div className="rounded-lg border border-border bg-card/50 p-4">
+        <label htmlFor="event-name" className="flex items-center gap-1.5 text-sm font-medium">
+          <Tag className="h-3.5 w-3.5 text-primary" />
+          Event / campaign name
+          <span className="font-normal text-muted-foreground">(optional)</span>
+        </label>
+        <p className="mb-2 mt-1 text-xs text-muted-foreground">
+          A static label stamped onto every row in this batch — e.g. the webinar, conference, or ad
+          this list came from. It flows straight through to the CRM exports.
+        </p>
+        <Input
+          id="event-name"
+          value={eventName}
+          onChange={(e) => onEventNameChange(e.target.value)}
+          placeholder="e.g. SaaStr Annual 2026"
+          className="max-w-sm"
+        />
+      </div>
+
       <div
         onDragOver={(e) => {
           e.preventDefault()
