@@ -88,6 +88,9 @@ export const CUSTOMERIO_HEADERS = [
   "event_name",
   "source",
   "ingested_at",
+  "outreach_1",
+  "outreach_2",
+  "outreach_3",
 ]
 
 function customerIoRecord(row: ProcessedRow): (string | number)[] {
@@ -106,6 +109,9 @@ function customerIoRecord(row: ProcessedRow): (string | number)[] {
     row.eventName,
     row.source,
     row.ingested_at,
+    row.outreach[0] ?? "",
+    row.outreach[1] ?? "",
+    row.outreach[2] ?? "",
   ]
 }
 
@@ -122,6 +128,9 @@ export const SALESFORCE_HEADERS = [
   "LeadSource",
   "Rating",
   "Description",
+  "Outreach_1",
+  "Outreach_2",
+  "Outreach_3",
 ]
 
 function salesforceRating(row: ProcessedRow): string {
@@ -154,6 +163,9 @@ function salesforceRecord(row: ProcessedRow): (string | number)[] {
     "Self-Serve Signup",
     salesforceRating(row),
     note,
+    row.outreach[0] ?? "",
+    row.outreach[1] ?? "",
+    row.outreach[2] ?? "",
   ]
 }
 
@@ -179,6 +191,9 @@ export const SNOWFLAKE_HEADERS = [
   "EVENT_NAME",
   "SOURCE",
   "INGESTED_AT",
+  "OUTREACH_1",
+  "OUTREACH_2",
+  "OUTREACH_3",
 ]
 
 function snowflakeRecord(row: ProcessedRow): (string | number)[] {
@@ -200,6 +215,9 @@ function snowflakeRecord(row: ProcessedRow): (string | number)[] {
     row.eventName,
     row.source,
     row.ingested_at,
+    row.outreach[0] ?? "",
+    row.outreach[1] ?? "",
+    row.outreach[2] ?? "",
   ]
 }
 
@@ -364,6 +382,9 @@ export function getFieldMapping(platform: Platform): FieldMap[] {
         { canonical: "event_name (static)", crmField: "event_name", note: "Applied to every row in this batch" },
         { canonical: "source", crmField: "source" },
         { canonical: "ingested_at", crmField: "ingested_at", note: "ISO 8601" },
+        { canonical: "outreach draft 1", crmField: "outreach_1", note: "Tier-aware sales message (touch 1 of 3)" },
+        { canonical: "outreach draft 2", crmField: "outreach_2", note: "Sales message (touch 2 of 3)" },
+        { canonical: "outreach draft 3", crmField: "outreach_3", note: "Sales message (touch 3 of 3)" },
       ]
     case "salesforce":
       return [
@@ -375,6 +396,9 @@ export function getFieldMapping(platform: Platform): FieldMap[] {
         { canonical: "(static)", crmField: "LeadSource", note: '"Self-Serve Signup"' },
         { canonical: "enterprise_tier", crmField: "Rating", note: "Hot→Hot, Warm→Warm, Low Priority→Cold, Needs Review→blank" },
         { canonical: "event_name + data quality flags", crmField: "Description", note: "Event/campaign name plus a plain-English note on any defaulted fields" },
+        { canonical: "outreach draft 1", crmField: "Outreach_1", note: "Tier-aware sales message (touch 1 of 3) — map to a custom field" },
+        { canonical: "outreach draft 2", crmField: "Outreach_2", note: "Sales message (touch 2 of 3)" },
+        { canonical: "outreach draft 3", crmField: "Outreach_3", note: "Sales message (touch 3 of 3)" },
       ]
     case "snowflake":
       return [
@@ -395,6 +419,9 @@ export function getFieldMapping(platform: Platform): FieldMap[] {
         { canonical: "event_name (static)", crmField: "EVENT_NAME", note: "Applied to every row in this batch" },
         { canonical: "source", crmField: "SOURCE" },
         { canonical: "ingested_at", crmField: "INGESTED_AT" },
+        { canonical: "outreach draft 1", crmField: "OUTREACH_1", note: "Tier-aware sales message (touch 1 of 3)" },
+        { canonical: "outreach draft 2", crmField: "OUTREACH_2", note: "Sales message (touch 2 of 3)" },
+        { canonical: "outreach draft 3", crmField: "OUTREACH_3", note: "Sales message (touch 3 of 3)" },
       ]
   }
 }

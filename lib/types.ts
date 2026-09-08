@@ -58,6 +58,9 @@ export interface ProcessedRow {
   enterprise_tier: EnterpriseTier
   score_reasons: string[]
 
+  // Sales outreach drafts (3-touch sequence, tier-aware)
+  outreach: string[]
+
   // Provenance
   source: string
   ingested_at: string
