@@ -142,7 +142,9 @@ function salesforceRecord(row: ProcessedRow): (string | number)[] {
   const lastName = lastNameDefaulted ? "Unknown" : row.lastName
   const companyDefaulted = row.companyName === ""
   const company = companyDefaulted ? row.emailDomain || "Unknown" : row.companyName
-  const note = humanFlagNote(row, companyDefaulted, lastNameDefaulted)
+  const flagNote = humanFlagNote(row, companyDefaulted, lastNameDefaulted)
+  const eventNote = row.eventName ? `Event: ${row.eventName}.` : ""
+  const note = [eventNote, flagNote].filter(Boolean).join(" ")
   return [
     lastName,
     row.firstName,
@@ -372,7 +374,7 @@ export function getFieldMapping(platform: Platform): FieldMap[] {
         { canonical: "email_domain", crmField: "Website" },
         { canonical: "(static)", crmField: "LeadSource", note: '"Self-Serve Signup"' },
         { canonical: "enterprise_tier", crmField: "Rating", note: "Hot→Hot, Warm→Warm, Low Priority→Cold, Needs Review→blank" },
-        { canonical: "data quality flags", crmField: "Description", note: "Plain-English note on any defaulted fields" },
+        { canonical: "event_name + data quality flags", crmField: "Description", note: "Event/campaign name plus a plain-English note on any defaulted fields" },
       ]
     case "snowflake":
       return [
