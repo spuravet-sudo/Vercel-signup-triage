@@ -36,7 +36,7 @@ export function HeroSection() {
           <h1 className="text-pretty text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
             Turn messy signups into sales-ready pipeline
           </h1>
-          <p className="mt-5 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
+          <p className="mt-5 max-w-2xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
             Every self-serve signup arrives messy — mixed casing, personal emails, duplicates, and
             no priority. Signup Triage cleans, deduplicates, and scores the whole list in seconds, so
             your team spends time selling to the right accounts instead of fixing CSVs.
