@@ -180,6 +180,7 @@ export function ResultsTable({ rows }: { rows: ProcessedRow[] }) {
               <TableHead>Email</TableHead>
               <TableHead>Company</TableHead>
               <TableHead className="w-[90px]">Region</TableHead>
+              <TableHead>Event</TableHead>
               <SortHeader
                 label="Tier"
                 active={sortKey === "tier"}
@@ -200,7 +201,7 @@ export function ResultsTable({ rows }: { rows: ProcessedRow[] }) {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={10} className="py-10 text-center text-sm text-muted-foreground">
                   No rows match the current filters.
                 </TableCell>
               </TableRow>
@@ -262,6 +263,11 @@ export function ResultsTable({ rows }: { rows: ProcessedRow[] }) {
                     </TableCell>
                     <TableCell>
                       <span className="font-mono text-xs">{row.region}</span>
+                    </TableCell>
+                    <TableCell className="max-w-[160px]">
+                      <span className="block truncate text-xs">
+                        {row.eventName || <span className="text-muted-foreground">—</span>}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <TierBadge tier={row.enterprise_tier} />
@@ -337,7 +343,7 @@ export function ResultsTable({ rows }: { rows: ProcessedRow[] }) {
                   </TableRow>
                   {isOpen && (
                     <TableRow className="hover:bg-transparent">
-                      <TableCell colSpan={9} className="bg-muted/30 py-3">
+                      <TableCell colSpan={10} className="bg-muted/30 py-3">
                         <div className="rounded-md border border-border bg-background p-3">
                           <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                             Raw vs. cleaned
