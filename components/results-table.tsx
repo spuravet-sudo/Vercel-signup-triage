@@ -176,7 +176,7 @@ export function ResultsTable({ rows }: { rows: ProcessedRow[] }) {
             <TableRow className="hover:bg-transparent">
               <TableHead className="w-[36px]" aria-label="Expand" />
               <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
+              <TableHead className="w-[110px]">Email</TableHead>
               <TableHead>Company</TableHead>
               <TableHead className="w-[150px]">Industry</TableHead>
               <TableHead className="w-[90px]">Region</TableHead>
@@ -249,7 +249,7 @@ export function ResultsTable({ rows }: { rows: ProcessedRow[] }) {
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="max-w-[220px]">
+                    <TableCell className="w-[110px] max-w-[110px]">
                       <span className="block truncate font-mono text-xs">
                         {row.email || <span className="text-review">missing</span>}
                       </span>
