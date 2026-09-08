@@ -11,6 +11,11 @@ export const PLATFORMS: { id: Platform; label: string }[] = [
 
 const bool = (v: boolean) => (v ? "TRUE" : "FALSE")
 
+/** Per-row identifier for exports: the row number plus the batch event name. */
+function rowIdentifier(row: ProcessedRow): string {
+  return row.eventName ? `${row.rowId} - ${row.eventName}` : String(row.rowId)
+}
+
 /* -------------------------------------------------------------------------- */
 /*  Row partitioning                                                           */
 /* -------------------------------------------------------------------------- */
@@ -74,6 +79,7 @@ function humanFlagNote(row: ProcessedRow, companyDefaulted: boolean, lastNameDef
 /* -------------------------------------------------------------------------- */
 
 export const CUSTOMERIO_HEADERS = [
+  "row_id",
   "email",
   "first_name",
   "last_name",
@@ -95,6 +101,7 @@ export const CUSTOMERIO_HEADERS = [
 
 function customerIoRecord(row: ProcessedRow): (string | number)[] {
   return [
+    rowIdentifier(row),
     row.email,
     row.firstName,
     row.lastName,
@@ -120,6 +127,7 @@ function customerIoRecord(row: ProcessedRow): (string | number)[] {
 /* -------------------------------------------------------------------------- */
 
 export const SALESFORCE_HEADERS = [
+  "Row_ID",
   "LastName",
   "FirstName",
   "Company",
@@ -155,6 +163,7 @@ function salesforceRecord(row: ProcessedRow): (string | number)[] {
   const eventNote = row.eventName ? `Event: ${row.eventName}.` : ""
   const note = [eventNote, flagNote].filter(Boolean).join(" ")
   return [
+    rowIdentifier(row),
     lastName,
     row.firstName,
     company,
@@ -174,6 +183,7 @@ function salesforceRecord(row: ProcessedRow): (string | number)[] {
 /* -------------------------------------------------------------------------- */
 
 export const SNOWFLAKE_HEADERS = [
+  "ROW_ID",
   "EMAIL",
   "FIRST_NAME",
   "LAST_NAME",
@@ -198,6 +208,7 @@ export const SNOWFLAKE_HEADERS = [
 
 function snowflakeRecord(row: ProcessedRow): (string | number)[] {
   return [
+    rowIdentifier(row),
     row.email,
     row.firstName,
     row.lastName,
@@ -227,6 +238,7 @@ function snowflakeRecord(row: ProcessedRow): (string | number)[] {
 
 export const EXCLUDED_HEADERS = [
   "row_id",
+  // row_id = "{row number} - {event name}"
   "email",
   "first_name",
   "last_name",
@@ -246,7 +258,7 @@ function exclusionReason(row: ProcessedRow): string {
 
 function excludedRecord(row: ProcessedRow): (string | number)[] {
   return [
-    row.rowId,
+    rowIdentifier(row),
     row.email,
     row.firstName,
     row.lastName,
@@ -368,6 +380,7 @@ export function getFieldMapping(platform: Platform): FieldMap[] {
   switch (platform) {
     case "customerio":
       return [
+        { canonical: "row number + event_name", crmField: "row_id", note: "Per-row identifier, e.g. \"12 - SaaStr Annual 2026\"" },
         { canonical: "email (normalized)", crmField: "email", note: "Identifier column — always populated, never blank" },
         { canonical: "first_name", crmField: "first_name" },
         { canonical: "last_name", crmField: "last_name" },
@@ -388,6 +401,7 @@ export function getFieldMapping(platform: Platform): FieldMap[] {
       ]
     case "salesforce":
       return [
+        { canonical: "row number + event_name", crmField: "Row_ID", note: 'Per-row identifier, e.g. "12 - SaaStr Annual 2026" — map to a custom field' },
         { canonical: "last_name", crmField: "LastName", note: 'Required — defaults to "Unknown" if blank' },
         { canonical: "first_name", crmField: "FirstName" },
         { canonical: "company_name", crmField: "Company", note: "Required — defaults to email domain if blank" },
@@ -402,6 +416,7 @@ export function getFieldMapping(platform: Platform): FieldMap[] {
       ]
     case "snowflake":
       return [
+        { canonical: "row number + event_name", crmField: "ROW_ID", note: 'Per-row identifier, e.g. "12 - SaaStr Annual 2026"' },
         { canonical: "email (normalized)", crmField: "EMAIL" },
         { canonical: "first_name", crmField: "FIRST_NAME" },
         { canonical: "last_name", crmField: "LAST_NAME" },

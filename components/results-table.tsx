@@ -175,7 +175,6 @@ export function ResultsTable({ rows }: { rows: ProcessedRow[] }) {
           <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="w-[36px]" aria-label="Expand" />
-              <TableHead className="w-[60px]">Row</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Company</TableHead>
@@ -202,7 +201,7 @@ export function ResultsTable({ rows }: { rows: ProcessedRow[] }) {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={11} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={10} className="py-10 text-center text-sm text-muted-foreground">
                   No rows match the current filters.
                 </TableCell>
               </TableRow>
@@ -226,9 +225,6 @@ export function ResultsTable({ rows }: { rows: ProcessedRow[] }) {
                           className={cn("h-4 w-4 transition-transform", isOpen && "rotate-90")}
                         />
                       </button>
-                    </TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">
-                      {row.rowId}
                     </TableCell>
                     <TableCell className="max-w-[160px]">
                       <span className="block truncate">
@@ -382,7 +378,7 @@ export function ResultsTable({ rows }: { rows: ProcessedRow[] }) {
                   </TableRow>
                   {isOpen && (
                     <TableRow className="hover:bg-transparent">
-                      <TableCell colSpan={11} className="bg-muted/30 py-3">
+                      <TableCell colSpan={10} className="bg-muted/30 py-3">
                         <div className="rounded-md border border-border bg-background p-3">
                           <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                             Raw vs. cleaned
