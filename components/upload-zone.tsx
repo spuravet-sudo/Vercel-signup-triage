@@ -56,20 +56,30 @@ export function UploadZone({
     [onData],
   )
 
+  const hasEventName = eventName.trim().length > 0
+
   const handleFiles = React.useCallback(
     (files: FileList | null) => {
       const file = files?.[0]
       if (!file) return
+      if (!hasEventName) {
+        setError("Enter an event / campaign name before adding signup data.")
+        return
+      }
       if (!/\.csv$/i.test(file.name) && file.type !== "text/csv") {
         setError("Please upload a .csv file.")
         return
       }
       parseFile(file)
     },
-    [parseFile],
+    [parseFile, hasEventName],
   )
 
   const loadSample = React.useCallback(async () => {
+    if (!hasEventName) {
+      setError("Enter an event / campaign name before adding signup data.")
+      return
+    }
     setError(null)
     setLoading(true)
     try {
@@ -87,7 +97,7 @@ export function UploadZone({
       setLoading(false)
       setError(e instanceof Error ? e.message : "Failed to load sample.")
     }
-  }, [onData])
+  }, [onData, hasEventName])
 
   return (
     <div className="flex flex-col gap-3">
@@ -95,7 +105,7 @@ export function UploadZone({
         <label htmlFor="event-name" className="flex items-center gap-1.5 text-sm font-medium">
           <Tag className="h-3.5 w-3.5 text-primary" />
           Event / campaign name
-          <span className="font-normal text-muted-foreground">(optional)</span>
+          <span className="font-normal text-destructive">*required</span>
         </label>
         <p className="mb-2 mt-1 text-xs text-muted-foreground">
           A static label stamped onto every row in this batch — e.g. the webinar, conference, or ad
@@ -106,6 +116,9 @@ export function UploadZone({
           value={eventName}
           onChange={(e) => onEventNameChange(e.target.value)}
           placeholder="e.g. SaaStr Annual 2026"
+          required
+          aria-required="true"
+          aria-invalid={!hasEventName}
           className="max-w-sm"
         />
       </div>
@@ -121,9 +134,11 @@ export function UploadZone({
           setDragging(false)
           handleFiles(e.dataTransfer.files)
         }}
+        aria-disabled={!hasEventName}
         className={cn(
           "relative flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-card/50 px-6 py-5 text-center transition-colors",
           dragging && "border-primary bg-primary/5",
+          !hasEventName && "opacity-60",
         )}
       >
         <input
@@ -146,7 +161,8 @@ export function UploadZone({
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="text-primary underline-offset-4 hover:underline"
+              disabled={!hasEventName}
+              className="text-primary underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:no-underline disabled:opacity-50"
             >
               browse
             </button>
@@ -156,7 +172,12 @@ export function UploadZone({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" size="sm" onClick={loadSample} disabled={loading}>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={loadSample}
+            disabled={loading || !hasEventName}
+          >
             <Sparkles className="h-4 w-4" />
             Load Sample Data
           </Button>
