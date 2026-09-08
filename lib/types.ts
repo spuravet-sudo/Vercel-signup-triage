@@ -1,3 +1,5 @@
+import type { Industry } from "./industry"
+
 export type Region = "NA" | "EMEA" | "APAC" | "LATAM" | "Unknown"
 
 export type EnterpriseTier = "Hot" | "Warm" | "Low Priority" | "Needs Review"
@@ -36,6 +38,7 @@ export interface ProcessedRow {
   fullName: string
   companyName: string
   companyNameNormalized: string
+  industry: Industry
   region: Region
 
   // Data quality flags
