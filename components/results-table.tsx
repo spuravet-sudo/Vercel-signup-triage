@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ArrowDown, ArrowRight, ArrowUp, ChevronRight, ChevronsUpDown, HelpCircle, Info } from "lucide-react"
+import { ArrowDown, ArrowRight, ArrowUp, ChevronRight, ChevronsUpDown, HelpCircle, Info, Mail } from "lucide-react"
 
 import {
   Table,
@@ -195,13 +195,14 @@ export function ResultsTable({ rows }: { rows: ProcessedRow[] }) {
                 onClick={() => toggleSort("score")}
                 className="w-[90px]"
               />
+              <TableHead className="w-[240px]">Outreach (3-touch)</TableHead>
               <TableHead className="w-[60px] text-right">Why</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={10} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={11} className="py-10 text-center text-sm text-muted-foreground">
                   No rows match the current filters.
                 </TableCell>
               </TableRow>
@@ -281,6 +282,45 @@ export function ResultsTable({ rows }: { rows: ProcessedRow[] }) {
                         {row.enterprise_score}
                       </span>
                     </TableCell>
+                    <TableCell className="max-w-[240px]">
+                      {row.outreach.some(Boolean) ? (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              type="button"
+                              aria-label={`Outreach drafts for row ${row.rowId}`}
+                              className="flex w-full items-start gap-1.5 text-left text-xs text-muted-foreground hover:text-foreground"
+                            >
+                              <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                              <span className="line-clamp-2">{row.outreach[0]}</span>
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent align="end" className="w-96">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 border-b border-border pb-2">
+                                <Mail className="h-4 w-4 text-primary" />
+                                <p className="text-sm font-semibold">
+                                  Suggested outreach
+                                </p>
+                                <TierBadge tier={row.enterprise_tier} />
+                              </div>
+                              <ol className="space-y-2.5">
+                                {row.outreach.map((m, i) => (
+                                  <li key={i} className="text-xs leading-relaxed text-foreground">
+                                    <span className="mb-0.5 block font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
+                                      Touch {i + 1}
+                                    </span>
+                                    {m}
+                                  </li>
+                                ))}
+                              </ol>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right">
                       <Popover>
                         <PopoverTrigger asChild>
@@ -343,7 +383,7 @@ export function ResultsTable({ rows }: { rows: ProcessedRow[] }) {
                   </TableRow>
                   {isOpen && (
                     <TableRow className="hover:bg-transparent">
-                      <TableCell colSpan={10} className="bg-muted/30 py-3">
+                      <TableCell colSpan={11} className="bg-muted/30 py-3">
                         <div className="rounded-md border border-border bg-background p-3">
                           <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                             Raw vs. cleaned

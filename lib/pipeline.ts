@@ -8,6 +8,7 @@ import {
   defaultTriageConfig,
 } from "./config"
 import type { ScoringWeights, TriageConfig } from "./config"
+import { generateOutreach } from "./outreach"
 import type {
   EnterpriseTier,
   ProcessedRow,
@@ -285,6 +286,7 @@ function buildBaseRow(
     source,
     ingested_at: ingestedAt,
     eventName,
+    outreach: ["", "", ""],
   }
 }
 
@@ -457,6 +459,7 @@ export function runPipeline(rawRows: RawRow[], options: PipelineOptions = {}): P
   for (const row of rows) {
     const domainCount = row.emailDomain ? (domainCounts.get(row.emailDomain) ?? 0) : 0
     scoreRow(row, domainCount, config)
+    row.outreach = generateOutreach(row)
   }
 
   return rows
